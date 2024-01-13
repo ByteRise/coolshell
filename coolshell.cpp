@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <Windows.h>
 #include <filesystem>
+#include <fstream>
 
 using namespace std;
 
@@ -151,6 +152,21 @@ string getFileIcon(const string& extension) {
     }
 }
 
+// READFILE FUNCTION HERE
+void readFile(const string& filepath) {
+    ifstream file(filepath);
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            cout << line << endl;
+        }
+        file.close();
+    } else {
+        cerr << "Unable to open file: " << filepath << endl;
+    }
+}
+
+
 void listFilesInDirectory() {
     for (const auto& entry : filesystem::directory_iterator(filesystem::current_path())) {
         auto filepath = entry.path();
@@ -200,6 +216,7 @@ int main() {
 			cout << "  cd          Changes path\n";
 			cout << "  rm          Removes the file without annoying /s /q\n";
 			cout << "  ls          Lists files in current directory\n";
+			cout << "  rf          Prints the content of the file\n";
 			cout << "  clear       Clears the screen\n";
 			cout << "  pwd         Prints current path\n";
 			cout << "  date        Prints current date\n";
@@ -220,6 +237,9 @@ int main() {
                 cerr << "Failed to change directory to: " << tokens[1] << endl;
             }
         }
+		else if (command == "rf" && tokens.size() > 1) {
+			readFile(tokens[1]);
+		}
         else if (command == "rm" && tokens.size() > 1) {
             removeFile(tokens[1]);
         }

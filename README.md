@@ -26,6 +26,7 @@ Run `coolshell.cpp` in your preferred C++ environment. Once started, you will se
 - `rm <filename>`: Removes the specified file.
 - `ls`: Lists files in the current directory with icons and sizes.
 - `clear`: Clears the console screen.
+- `rf`: Reads file context
 - `pwd`: Prints the current working directory path.
 - `date`: Prints the current date.
 - `time`: Prints the current time.
