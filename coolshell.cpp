@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <filesystem>
 #include <fstream>
+#include <lmcons.h>
 
 using namespace std;
 
@@ -34,7 +35,12 @@ void runGitShell() {
 
         if (gitCmd == "exit") {
             break;
-        }
+		}
+		else if (gitCmd == "help") {
+			cout << "Commands:" << endl;
+			cout << "exit - Exit git-shell mode" << endl;
+			cout << "help - Show this help message" << endl;
+		}
 
         runCommand("git " + gitCmd);
     }
@@ -47,7 +53,7 @@ void downloadPackage(const string& packageName) {
     }
     else {
         cout << "Using winget to download " << packageName << "..." << endl;
-		// TODO: Добавить поддержку winget
+		runCommand("winget install " + packageName);
     }
 }
 
@@ -123,6 +129,9 @@ string getFileIcon(const string& extension) {
     if (extension == ".txt") {
         return "📄";
     }
+	else if (extension == ".exe") {
+		return "⚙️";
+	}
     else if (extension == ".cpp" || extension == ".h") {
         return "👾";
     }
@@ -181,6 +190,36 @@ void listFilesInDirectory() {
     }
 }
 
+void printSystemInfo() {
+    // windows version
+    RTL_OSVERSIONINFOW rovi = { 0 };
+    rovi.dwOSVersionInfoSize = sizeof(rovi);
+    HMODULE hMod = GetModuleHandleW(L"ntdll.dll");
+    if (hMod) {
+        auto RtlGetVersion = (LONG(WINAPI*)(PRTL_OSVERSIONINFOW))GetProcAddress(hMod, "RtlGetVersion");
+        if (RtlGetVersion != nullptr) {
+            RtlGetVersion(&rovi);
+            std::wcout << L"Windows Version: " << rovi.dwMajorVersion << L"." << rovi.dwMinorVersion << L"." << rovi.dwBuildNumber << std::endl;
+        }
+    }
+	// computer name
+	wchar_t computername[MAX_COMPUTERNAME_LENGTH + 1];
+	DWORD computername_len = MAX_COMPUTERNAME_LENGTH + 1;
+	GetComputerName(computername, &computername_len);
+	wcout << L"Computer Name: " << computername << endl;
+
+	// username
+	wchar_t username[UNLEN + 1];
+	DWORD username_len = UNLEN + 1;
+	GetUserName(username, &username_len);
+	wcout << L"Username: " << username << endl;
+
+	// number of processors
+	SYSTEM_INFO si;
+	GetSystemInfo(&si);
+	wcout << L"Number of Processors: " << si.dwNumberOfProcessors << endl;
+}
+
 void clearScreen() {
     system("cls");
 }
@@ -225,6 +264,7 @@ int main() {
 			cout << "  echo        Prints text\n";
             cout << "  download    Downloads a package\n";
 			cout << "  wsl         Inits a wsl-shell\n";
+            cout << "  info        Prints info about system\n";
 			cout << "  help        Prints this help message\n";
             cout << "  exit        Exits the shell\n";
         } else if (command == "exit") {
@@ -270,6 +310,9 @@ int main() {
         else if (command == "wsl") {
             initWslShell();
         }
+		else if (command == "info") {
+			printSystemInfo();
+		}
         else {
             cerr << "Unknown command: " << command << endl;
         }

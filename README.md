@@ -16,7 +16,7 @@ CoolShell is a custom shell utility designed to enhance the command-line experie
 
 ## Usage
 
-Run `coolshell.cpp` in your preferred C++ environment. Once started, you will see a prompt indicating the mode you are in (`coolshell@main` for Windows or `coolshell@wsl` for WSL mode). You can enter commands directly at the prompt.
+Run `coolshell.cpp` in your preferred C++ environment. Once started, you will see a prompt indicating the mode you are in (`coolshell@main` for Windows or `coolshell@wsl` for WSL mode and `coolshell@git` for git mode). You can enter commands directly at the prompt.
 
 ### Available Commands
 
@@ -34,6 +34,7 @@ Run `coolshell.cpp` in your preferred C++ environment. Once started, you will se
 - `echo <text>`: Prints the provided text.
 - `download <package>`: Downloads the specified package using the appropriate package manager.
 - `wsl`: Toggles WSL mode on or off.
+- `info`: Prints info of computer
 - `exit`: Exits the shell.
 
 ## Build and Run
