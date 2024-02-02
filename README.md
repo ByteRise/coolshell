@@ -52,6 +52,11 @@ g++ -std=c++17 coolshell.cpp -o coolshell
 
 Contributions are welcome! If you have ideas for improvements or bug fixes, please feel free to make a pull request or open an issue.
 
+## Roadmap (but its actually a todo)
+- [x] Do a roadmap
+- [x] Implement purple support
+- [] Make it cross-platform
+
 ## Disclaimer
 
 This tool is provided as-is, and while it has been tested, the developers are not responsible for any damage or data loss that may occur due to its use.
