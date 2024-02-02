@@ -55,7 +55,7 @@ Contributions are welcome! If you have ideas for improvements or bug fixes, plea
 ## Roadmap (but its actually a todo)
 - [x] Do a roadmap
 - [x] Implement purple support
-- [] Make it cross-platform
+- [ ] Make it cross-platform
 
 ## Disclaimer
 
