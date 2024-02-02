@@ -26,6 +26,36 @@ void runCommand(const string& cmd) {
     }
 }
 
+bool checkPurpleExeExists() {
+    string exeName = "purple.exe";
+    string pathEnv;
+    char* buffer;
+    size_t len;
+    _dupenv_s(&buffer, &len, "PATH");
+    if (buffer != NULL) {
+        pathEnv = buffer;
+        free(buffer);
+    }
+
+    string delimiter = ";";
+
+    size_t pos = 0;
+    string path;
+    while ((pos = pathEnv.find(delimiter)) != string::npos) {
+        path = pathEnv.substr(0, pos);
+        pathEnv.erase(0, pos + delimiter.length());
+
+        filesystem::path exePath = path + "\\" + exeName;
+        if (filesystem::exists(exePath)) {
+            cout << "DEBUG: The file purple.exe exists in the system's PATH." << endl;
+            return true;
+        }
+    }
+
+    std::cout << "DEBUG: The file purple.exe does not exist in the system's PATH." << std::endl;
+    return false;
+}
+
 void runGitShell() {
     string gitCmd;
     cout << "Entering git-shell mode. Type 'exit' to leave." << endl;
@@ -43,6 +73,29 @@ void runGitShell() {
 		}
 
         runCommand("git " + gitCmd);
+    }
+}
+
+void runpurpleShell() {
+    string gitCmd;
+    cout << "Entering purple-shell mode. Type 'exit' to leave." << endl;
+    // проверка существует ли файл purple.exe в path
+	bool isexist = checkPurpleExeExists();
+
+    while (true) {
+        cout << "coolshell@purple" << "> ";
+        getline(cin, gitCmd);
+
+        if (gitCmd == "exit") {
+            break;
+        }
+        else if (gitCmd == "help") {
+            cout << "Commands:" << endl;
+            cout << "exit - Exit purple-shell mode" << endl;
+            cout << "help - Show this help message" << endl;
+        }
+
+        runCommand("purple --command" + gitCmd); // !!
     }
 }
 
@@ -126,38 +179,11 @@ string formatFileSize(uintmax_t size) {
 }
 
 string getFileIcon(const string& extension) {
-    if (extension == ".txt") {
-        return "📄";
-    }
-	else if (extension == ".exe") {
-		return "⚙️";
-	}
-    else if (extension == ".cpp" || extension == ".h") {
-        return "👾";
-    }
-    else if (extension == ".py") {
-        return "🐍";
-    }
-    else if (extension == ".html" || extension == ".htm") {
-        return "🌐";
-    }
-    else if (extension == ".js") {
-        return "🌐";
-    }
-    else if (extension == ".java") {
-        return "☕";
-    }
-    else if (extension == ".json") {
-        return "🗃️";
-    }
-    else if (extension == ".xml") {
-        return "📑";
-    }
-    else if (filesystem::is_directory(extension)) {
-        return "📁";
+    if (filesystem::is_directory(extension)) {
+        return "🗁";
     }
     else {
-        return "❓"; // Иконка для неизвестного типа файла
+        return "▯";
     }
 }
 
@@ -224,6 +250,8 @@ void clearScreen() {
     system("cls");
 }
 
+
+
 vector<string> splitString(const string& str) {
     istringstream iss(str);
     vector<string> tokens;
@@ -239,7 +267,7 @@ int main() {
     while (true) {
 		if (isWslMode) {
 			cout << "coolshell@wsl" << "> ";
-        }
+		}
         else {
             cout << "coolshell@main" << "> ";
         }
@@ -264,6 +292,7 @@ int main() {
 			cout << "  echo        Prints text\n";
             cout << "  download    Downloads a package\n";
 			cout << "  wsl         Inits a wsl-shell\n";
+			cout << "  purple      Inits a purple-shell\n";
             cout << "  info        Prints info about system\n";
 			cout << "  help        Prints this help message\n";
             cout << "  exit        Exits the shell\n";
@@ -272,6 +301,9 @@ int main() {
         } else if (command == "git") {
             runGitShell();
         }
+		else if (command == "purple") {
+            runpurpleShell();
+		}
         else if (command == "cd" && tokens.size() > 1) {
             if (!changeDirectory(tokens[1])) {
                 cerr << "Failed to change directory to: " << tokens[1] << endl;
@@ -314,7 +346,8 @@ int main() {
 			printSystemInfo();
 		}
         else {
-            cerr << "Unknown command: " << command << endl;
+			// Исполнение команды в консоли (либо если в wsl режиме, тогда в wsl)
+			runCommand(command);
         }
     }
     return 0;

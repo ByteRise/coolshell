@@ -6,6 +6,7 @@ CoolShell is a custom shell utility designed to enhance the command-line experie
 
 - **WSL Mode Toggle**: Switch between Windows and WSL mode to execute commands in the desired environment.
 - **Git Shell**: Enter a dedicated shell for executing Git commands.
+- **Purple Shell**: Automatically adds `purple --command` before the command
 - **Download Packages**: Supports package installation using `apt-get` in WSL mode or `winget` in Windows mode (note: `winget` support is a TODO).
 - **File Operations**: Remove files, list files in the current directory, and display file sizes in a human-readable format.
 - **System Information**: Print the current system's computer name, path, date, and time.
@@ -34,6 +35,7 @@ Run `coolshell.cpp` in your preferred C++ environment. Once started, you will se
 - `echo <text>`: Prints the provided text.
 - `download <package>`: Downloads the specified package using the appropriate package manager.
 - `wsl`: Toggles WSL mode on or off.
+- `purple`: Toggles purple mode on or off.
 - `info`: Prints info of computer
 - `exit`: Exits the shell.
 
