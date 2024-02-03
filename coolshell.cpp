@@ -52,8 +52,37 @@ bool checkPurpleExeExists() {
         }
     }
 
-    std::cout << "DEBUG: The file purple.exe does not exist in the system's PATH." << std::endl;
-    return false;
+    std::cout << "DEBUG: The file purple.exe does not exist in the system's PATH. Starting downloading..." << std::endl;
+
+	string downloadUrl = "https://github.com/ByteRise/purple/releases/download/v1.4/purplepipmanager.exe";
+    
+    // downloading process
+    std::filesystem::path directory = "C:\\purplepipmanager";
+    if (!std::filesystem::exists(directory)) {
+        std::filesystem::create_directories(directory);
+    }
+
+    string command = "curl -L " + downloadUrl + " -o " + directory.string() + "\\purple.exe";
+    std::cout << "Executing command: " << command << std::endl;
+
+    int result = system(command.c_str());
+    if (result != 0) {
+        std::cerr << "Failed to download purplepipmanager.exe. Curl command failed. Trying to download it into Downloads..." << std::endl;
+        return false;
+    }
+
+    // downloading process 2
+    string command2 = "curl -L " + downloadUrl + " -o " + directory.string() + "\\purple.exe";
+    std::cout << "Executing command: " << command2 << std::endl;
+
+    int result2 = system(command2.c_str());
+    if (result2 != 0) {
+        std::cerr << "Failed to download purplepipmanager.exe. Curl command failed. Closing..." << std::endl;
+        return false;
+    }
+
+	cout << "Downloaded purplepipmanager.exe successfully. Its in C:\\purplepipmanager directory, add its in path or copy file purple.exe to directory, that exists in path" << endl;
+    return true;
 }
 
 void runGitShell() {
@@ -81,22 +110,23 @@ void runpurpleShell() {
     cout << "Entering purple-shell mode. Type 'exit' to leave." << endl;
     // проверка существует ли файл purple.exe в path
 	bool isexist = checkPurpleExeExists();
+	if (isexist) {
+        while (true) {
+            cout << "coolshell@purple" << "> ";
+            getline(cin, gitCmd);
 
-    while (true) {
-        cout << "coolshell@purple" << "> ";
-        getline(cin, gitCmd);
+            if (gitCmd == "exit") {
+                break;
+            }
+            else if (gitCmd == "help") {
+                cout << "Commands:" << endl;
+                cout << "exit - Exit purple-shell mode" << endl;
+                cout << "help - Show this help message" << endl;
+            }
 
-        if (gitCmd == "exit") {
-            break;
+            runCommand("purple --command" + gitCmd); // !!
         }
-        else if (gitCmd == "help") {
-            cout << "Commands:" << endl;
-            cout << "exit - Exit purple-shell mode" << endl;
-            cout << "help - Show this help message" << endl;
-        }
-
-        runCommand("purple --command" + gitCmd); // !!
-    }
+	}
 }
 
 void downloadPackage(const string& packageName) {
