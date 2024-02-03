@@ -18,12 +18,14 @@ void initWslShell() {
     cout << "WSL Shell " << (isWslMode ? "activated." : "deactivated.") << endl;
 }
 
-void runCommand(const string& cmd) {
+bool runCommand(const string& cmd) {
     string fullCmd = isWslMode ? "wsl " + cmd : cmd;
     int result = system(fullCmd.c_str());
     if (result != 0) {
         cerr << "Command failed: " << fullCmd << endl;
+        return false;
     }
+    return true;
 }
 
 bool checkPurpleExeExists() {
@@ -68,7 +70,6 @@ bool checkPurpleExeExists() {
     int result = system(command.c_str());
     if (result != 0) {
         std::cerr << "Failed to download purplepipmanager.exe. Curl command failed. Trying to download it into Downloads..." << std::endl;
-        return false;
     }
 
     // downloading process 2
@@ -81,7 +82,7 @@ bool checkPurpleExeExists() {
         return false;
     }
 
-	cout << "Downloaded purplepipmanager.exe successfully. Its in C:\\purplepipmanager directory, add its in path or copy file purple.exe to directory, that exists in path" << endl;
+	cout << "Downloaded purplepipmanager.exe successfully. Its in C:\\purplepipmanager directory (or Downloads), add its in path or copy file purple.exe to directory, that exists in path" << endl;
     return true;
 }
 
@@ -106,25 +107,28 @@ void runGitShell() {
 }
 
 void runpurpleShell() {
-    string gitCmd;
+    string purplecmd;
     cout << "Entering purple-shell mode. Type 'exit' to leave." << endl;
     // проверка существует ли файл purple.exe в path
 	bool isexist = checkPurpleExeExists();
 	if (isexist) {
         while (true) {
             cout << "coolshell@purple" << "> ";
-            getline(cin, gitCmd);
+            getline(cin, purplecmd);
 
-            if (gitCmd == "exit") {
+            if (purplecmd == "exit") {
                 break;
             }
-            else if (gitCmd == "help") {
+            else if (purplecmd == "help") {
                 cout << "Commands:" << endl;
                 cout << "exit - Exit purple-shell mode" << endl;
                 cout << "help - Show this help message" << endl;
             }
 
-            runCommand("purple --command" + gitCmd); // !!
+            bool result = runCommand("purple --command" + purplecmd); // !!
+			if (!result) {
+				runCommand("C:\\Users\\%USERNAME%\\Downloads\\purple.exe --command " + purplecmd);
+			}
         }
 	}
 }
