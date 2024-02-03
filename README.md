@@ -48,6 +48,12 @@ g++ -std=c++17 coolshell.cpp -o coolshell
 ./coolshell
 ```
 
+BUT!!! Recommended compile with visual studio native tools.
+
+```
+cl /std:c++17 coolshell.cpp
+```
+
 ## Contributions
 
 Contributions are welcome! If you have ideas for improvements or bug fixes, please feel free to make a pull request or open an issue.
@@ -56,6 +62,8 @@ Contributions are welcome! If you have ideas for improvements or bug fixes, plea
 - [x] Do a roadmap
 - [x] Implement purple support
 - [ ] Make it cross-platform
+- [ ] Add docker-shell
+- [ ] Add ssh, ftp... support
 
 ## Disclaimer
 
