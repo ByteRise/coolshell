@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <filesystem>
 #include <fstream>
+#include <thread>
 #include <lmcons.h>
 
 using namespace std;
@@ -221,7 +222,6 @@ string getFileIcon(const string& extension) {
     }
 }
 
-// READFILE FUNCTION HERE
 void readFile(const string& filepath) {
     ifstream file(filepath);
     if (file.is_open()) {
@@ -284,7 +284,34 @@ void clearScreen() {
     system("cls");
 }
 
+void ping_ip(const std::string& ip) {
+    std::string command = "ping -n 1 " + ip + " > NUL";
+    // Запуск команды ping и вывод результата
+    int result = system(command.c_str());
+    if (result == 0) {
+        std::cout << "IP Address " << ip << " is active." << std::endl;
+    }
+}
 
+void runScan() {
+    std::string base_ip = "192.168.100.";
+    int start_range = 1;
+    int end_range = 255;
+    std::vector<std::thread> threads;
+
+    for (int i = start_range; i <= end_range; ++i) {
+        std::stringstream ip;
+        ip << base_ip << i;
+
+        threads.emplace_back(ping_ip, ip.str());
+    }
+
+    for (std::thread& th : threads) {
+        if (th.joinable()) {
+            th.join();
+        }
+    }
+}
 
 vector<string> splitString(const string& str) {
     istringstream iss(str);
@@ -329,6 +356,7 @@ int main() {
 			cout << "  purple      Inits a purple-shell\n";
             cout << "  info        Prints info about system\n";
 			cout << "  help        Prints this help message\n";
+			cout << "  scan        Scanning network utility\n";
             cout << "  exit        Exits the shell\n";
         } else if (command == "exit") {
             break;
@@ -338,13 +366,20 @@ int main() {
 		else if (command == "purple") {
             runpurpleShell();
 		}
+        else if (command == "scan") {
+			runScan();
+        }
         else if (command == "cd" && tokens.size() > 1) {
             if (!changeDirectory(tokens[1])) {
                 cerr << "Failed to change directory to: " << tokens[1] << endl;
             }
         }
 		else if (command == "rf" && tokens.size() > 1) {
-			readFile(tokens[1]);
+			string tokenString = "";
+			for (const auto& token : tokens) {
+				tokenString += token + " ";
+			}
+			readFile(tokenString);
 		}
         else if (command == "rm" && tokens.size() > 1) {
             removeFile(tokens[1]);

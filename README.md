@@ -63,7 +63,8 @@ Contributions are welcome! If you have ideas for improvements or bug fixes, plea
 - [x] Implement purple support
 - [ ] Make it cross-platform
 - [ ] Add docker-shell
-- [ ] Add ssh, ftp... support
+- [x] Add ssh, ftp... support (added by redirecting unknown commands to the regular console)
+- [ ] Add `scan` network utility (in progress)
 
 ## Disclaimer
 
