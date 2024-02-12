@@ -9,10 +9,79 @@
 #include <fstream>
 #include <thread>
 #include <lmcons.h>
+#include <sstream>
 
 using namespace std;
 
 bool isWslMode = false;
+
+std::vector<std::string> scanNetwork(const std::string& baseIpAddress, int start, int end) {
+    std::vector<std::string> activeHosts;
+    std::string pingCommand = "ping -n 1 ";
+
+    for (int i = start; i <= end; ++i) {
+        std::string ipAddress = baseIpAddress + std::to_string(i);
+        std::string command = pingCommand + ipAddress;
+        int result = system(command.c_str());
+
+        if (result == 0) {
+            activeHosts.push_back(ipAddress);
+        }
+    }
+
+    return activeHosts;
+}
+
+std::string executeCommand(const std::string& command) {
+    std::string result;
+    FILE* pipe = _popen(command.c_str(), "r");
+    if (!pipe) return "Error executing command";
+    char buffer[128];
+    while (!feof(pipe)) {
+        if (fgets(buffer, 128, pipe) != NULL)
+            result += buffer;
+    }
+    _pclose(pipe);
+    return result;
+}
+
+void printArpTable(const std::vector<std::string>& activeHosts) {
+    std::cout << "Active IP Addresses:" << std::endl;
+    std::cout << "====================" << std::endl;
+    std::cout << "IP Address\t\tMAC Address" << std::endl;
+
+    std::string arpTable = executeCommand("arp -a");
+    std::istringstream arpStream(arpTable);
+    std::string line;
+    while (std::getline(arpStream, line)) {
+        std::istringstream lineStream(line);
+        std::string ipAddress, macAddress;
+        if (lineStream >> ipAddress >> macAddress) {
+            // Check if the IP address is in the list of active hosts
+            if (std::find(activeHosts.begin(), activeHosts.end(), ipAddress) != activeHosts.end()) {
+                std::cout << ipAddress << "\t\t" << macAddress << std::endl;
+            }
+        }
+    }
+}
+
+int scan() {
+    std::string baseIpAddress;
+    int start, end;
+
+    std::cout << "Enter base IP address (e.g., 192.168.1.): ";
+    std::cin >> baseIpAddress;
+    std::cout << "Enter start of range: ";
+    std::cin >> start;
+    std::cout << "Enter end of range: ";
+    std::cin >> end;
+
+    std::vector<std::string> activeHosts = scanNetwork(baseIpAddress, start, end);
+
+    printArpTable(activeHosts);
+
+    return 0;
+}
 
 void initWslShell() {
     isWslMode = !isWslMode; // Переключает состояние WSL-режима
@@ -133,6 +202,7 @@ void runpurpleShell() {
         }
 	}
 }
+
 
 void downloadPackage(const string& packageName) {
     if (isWslMode) {
@@ -284,34 +354,7 @@ void clearScreen() {
     system("cls");
 }
 
-void ping_ip(const std::string& ip) {
-    std::string command = "ping -n 1 " + ip + " > NUL";
-    // Запуск команды ping и вывод результата
-    int result = system(command.c_str());
-    if (result == 0) {
-        std::cout << "IP Address " << ip << " is active." << std::endl;
-    }
-}
 
-void runScan() {
-    std::string base_ip = "192.168.100.";
-    int start_range = 1;
-    int end_range = 255;
-    std::vector<std::thread> threads;
-
-    for (int i = start_range; i <= end_range; ++i) {
-        std::stringstream ip;
-        ip << base_ip << i;
-
-        threads.emplace_back(ping_ip, ip.str());
-    }
-
-    for (std::thread& th : threads) {
-        if (th.joinable()) {
-            th.join();
-        }
-    }
-}
 
 vector<string> splitString(const string& str) {
     istringstream iss(str);
@@ -367,7 +410,7 @@ int main() {
             runpurpleShell();
 		}
         else if (command == "scan") {
-			runScan();
+			scan();
         }
         else if (command == "cd" && tokens.size() > 1) {
             if (!changeDirectory(tokens[1])) {
