@@ -29,6 +29,7 @@ Run `coolshell.cpp` in your preferred C++ environment. Once started, you will se
 - `clear`: Clears the console screen.
 - `rf`: Reads file context
 - `pwd`: Prints the current working directory path.
+- `dc`: Deletes comments in code (only cpp files for now)
 - `date`: Prints the current date.
 - `time`: Prints the current time.
 - `hostname`: Prints the name of the computer.
@@ -65,6 +66,7 @@ Contributions are welcome! If you have ideas for improvements or bug fixes, plea
 - [ ] Add docker-shell
 - [x] Add ssh, ftp... support (added by redirecting unknown commands to the regular console)
 - [ ] Add `scan` network utility (in progress)
+- [ ] Complete the `dc` so that it works for all files
 
 ## Disclaimer
 

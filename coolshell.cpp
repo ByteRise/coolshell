@@ -15,74 +15,6 @@ using namespace std;
 
 bool isWslMode = false;
 
-std::vector<std::string> scanNetwork(const std::string& baseIpAddress, int start, int end) {
-    std::vector<std::string> activeHosts;
-    std::string pingCommand = "ping -n 1 ";
-
-    for (int i = start; i <= end; ++i) {
-        std::string ipAddress = baseIpAddress + std::to_string(i);
-        std::string command = pingCommand + ipAddress;
-        int result = system(command.c_str());
-
-        if (result == 0) {
-            activeHosts.push_back(ipAddress);
-        }
-    }
-
-    return activeHosts;
-}
-
-std::string executeCommand(const std::string& command) {
-    std::string result;
-    FILE* pipe = _popen(command.c_str(), "r");
-    if (!pipe) return "Error executing command";
-    char buffer[128];
-    while (!feof(pipe)) {
-        if (fgets(buffer, 128, pipe) != NULL)
-            result += buffer;
-    }
-    _pclose(pipe);
-    return result;
-}
-
-void printArpTable(const std::vector<std::string>& activeHosts) {
-    std::cout << "Active IP Addresses:" << std::endl;
-    std::cout << "====================" << std::endl;
-    std::cout << "IP Address\t\tMAC Address" << std::endl;
-
-    std::string arpTable = executeCommand("arp -a");
-    std::istringstream arpStream(arpTable);
-    std::string line;
-    while (std::getline(arpStream, line)) {
-        std::istringstream lineStream(line);
-        std::string ipAddress, macAddress;
-        if (lineStream >> ipAddress >> macAddress) {
-            // Check if the IP address is in the list of active hosts
-            if (std::find(activeHosts.begin(), activeHosts.end(), ipAddress) != activeHosts.end()) {
-                std::cout << ipAddress << "\t\t" << macAddress << std::endl;
-            }
-        }
-    }
-}
-
-int scan() {
-    std::string baseIpAddress;
-    int start, end;
-
-    std::cout << "Enter base IP address (e.g., 192.168.1.): ";
-    std::cin >> baseIpAddress;
-    std::cout << "Enter start of range: ";
-    std::cin >> start;
-    std::cout << "Enter end of range: ";
-    std::cin >> end;
-
-    std::vector<std::string> activeHosts = scanNetwork(baseIpAddress, start, end);
-
-    printArpTable(activeHosts);
-
-    return 0;
-}
-
 void initWslShell() {
     isWslMode = !isWslMode; // Переключает состояние WSL-режима
     cout << "WSL Shell " << (isWslMode ? "activated." : "deactivated.") << endl;
@@ -202,6 +134,172 @@ void runpurpleShell() {
         }
 	}
 }
+
+struct HostInfo {
+    string ip_address;
+    string hostname;
+    string status;
+    string mac_address; // Добавлено для хранения MAC-адреса
+};
+
+void scanShell() {
+    string scanCmd;
+    cout << "Entering scan-shell utility. Type 'exit' to leave." << endl;
+    while (true) {
+        cout << "coolshell@scan" << "> ";
+        getline(cin, scanCmd);
+
+        bool isVerbose = false;
+
+        if (scanCmd == "exit") {
+            break;
+        }
+        else if (scanCmd == "help") {
+            cout << "Commands:" << endl;
+            cout << "exit - Exit scan-shell mode" << endl;
+            cout << "help - Show this help message" << endl;
+            cout << "arp  - ARP packets utility (not working)" << endl;
+            cout << "show - Showing all available IP addresses" << endl;
+            cout << "verbose - Enabling/Disabling verbose" << endl;
+        }
+        else if (scanCmd == "arp") {
+            // Код для работы с ARP пакетами
+        }
+        else if (scanCmd == "verbose") {
+            isVerbose = !isVerbose;
+            cout << "Verbose mode changed. " << isVerbose << endl;
+        }
+        else if (scanCmd == "show") {
+            string network;
+
+            cout << "Enter network (e.g. 192.168.1.0/24): ";
+            cin >> network;
+
+            string command = "nmap -sn " + network;
+
+            cout << "Scanning network, please wait..." << endl;
+
+            system((command + " > scan_results.txt").c_str());
+
+            ifstream scanResults("scan_results.txt");
+
+            if (scanResults.is_open()) {
+                vector<HostInfo> hosts;
+
+                string line;
+                while (getline(scanResults, line)) {
+                    if (line.find("Nmap scan report") != string::npos) {
+                        HostInfo host;
+                        host.ip_address = line.substr(line.find("for ") + 4);
+                        host.hostname = "";
+                        host.status = "";
+                        host.mac_address = "";
+                        hosts.push_back(host);
+                    }
+                    else if (line.find("Host is") != string::npos) {
+                        hosts.back().status = line.substr(line.find("is ") + 3);
+                    }
+                    else if (line.find("MAC Address") != string::npos) {
+                        size_t pos = line.find("MAC Address: ");
+                        if (pos != string::npos) {
+                            hosts.back().mac_address = line.substr(pos + 13);
+                        }
+                    }
+                    else if (line.find("hostname") != string::npos) {
+                        hosts.back().hostname = line.substr(line.find("hostname") + 9);
+                    }
+                }
+
+                cout << "IP Address\t\tHostname\tMAC Address\t\tStatus" << endl;
+
+                for (const auto& host : hosts) {
+                    cout << host.ip_address << "\t\t" << host.hostname << "\t\t" << host.mac_address << "\t\t" << host.status << endl;
+                }
+
+                scanResults.close();
+            }
+            else {
+                cerr << "Unable to open scan results file." << endl;
+            }
+        }
+        else {
+            cout << "Unknown command. Type 'help' for a list of commands." << endl;
+        }
+    }
+}
+
+// START OF DELETING COMMENTS
+bool isComment(const string& line) {
+    size_t found = line.find("//");
+    return found != string::npos;
+}
+
+string removeSingleLineComment(const string& line) {
+    size_t found = line.find("//");
+    if (found != string::npos) {
+        return line.substr(0, found);
+    }
+    return line;
+}
+
+string removeMultiLineComment(const string& line, bool& inComment) {
+    size_t startComment = line.find("/*");
+    size_t endComment = line.find("*/");
+
+    if (startComment != string::npos && endComment != string::npos && startComment < endComment) {
+        inComment = false;
+        return line.substr(0, startComment) + line.substr(endComment + 2);
+    }
+    else if (startComment != string::npos && (endComment == string::npos || endComment < startComment)) {
+        inComment = true;
+        return line.substr(0, startComment);
+    }
+    else if (inComment && endComment != string::npos) {
+        inComment = false;
+        return line.substr(endComment + 2);
+    }
+    else if (inComment) {
+        return "";
+    }
+    return line;
+}
+
+string removeCommentsFromFile(const string& inputFile, const string& outputFile) {
+    ifstream inFile(inputFile);
+    ofstream outFile(outputFile);
+
+    if (!inFile) {
+        cerr << "Unable to open input file: " << inputFile << endl;
+        return "1";
+    }
+
+    if (!outFile) {
+        cerr << "Unable to open output file: " << outputFile << endl;
+        return "1";
+    }
+
+    string line;
+    bool inMultiLineComment = false;
+
+    while (getline(inFile, line)) {
+        if (!inMultiLineComment) {
+            line = removeSingleLineComment(line);
+            line = removeMultiLineComment(line, inMultiLineComment);
+            if (!line.empty()) {
+                outFile << line << endl;
+            }
+        }
+        else {
+            line = removeMultiLineComment(line, inMultiLineComment);
+        }
+    }
+
+    inFile.close();
+    outFile.close();
+    return "0";
+}
+
+// END OF DELETING COMMENTS
 
 
 void downloadPackage(const string& packageName) {
@@ -392,6 +490,7 @@ int main() {
 			cout << "  pwd         Prints current path\n";
 			cout << "  date        Prints current date\n";
 			cout << "  time        Prints current time\n";
+			cout << "  dc          Deletes comments in code\n";
 			cout << "  hostname    Prints current computer name\n";
 			cout << "  echo        Prints text\n";
             cout << "  download    Downloads a package\n";
@@ -410,7 +509,10 @@ int main() {
             runpurpleShell();
 		}
         else if (command == "scan") {
-			scan();
+			scanShell();
+        }
+        else if (command == "dc") {
+			removeCommentsFromFile(tokens[1], tokens[2]);
         }
         else if (command == "cd" && tokens.size() > 1) {
             if (!changeDirectory(tokens[1])) {
