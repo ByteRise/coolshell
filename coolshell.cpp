@@ -10,6 +10,7 @@
 #include <thread>
 #include <lmcons.h>
 #include <sstream>
+#include <regex>
 
 using namespace std;
 
@@ -58,8 +59,8 @@ bool checkPurpleExeExists() {
 
     std::cout << "DEBUG: The file purple.exe does not exist in the system's PATH. Starting downloading..." << std::endl;
 
-	string downloadUrl = "https://github.com/ByteRise/purple/releases/download/v1.4/purplepipmanager.exe";
-    
+    string downloadUrl = "https://github.com/ByteRise/purple/releases/download/v1.4/purplepipmanager.exe";
+
     // downloading process
     std::filesystem::path directory = "C:\\purplepipmanager";
     if (!std::filesystem::exists(directory)) {
@@ -84,7 +85,7 @@ bool checkPurpleExeExists() {
         return false;
     }
 
-	cout << "Downloaded purplepipmanager.exe successfully. Its in C:\\purplepipmanager directory (or Downloads), add its in path or copy file purple.exe to directory, that exists in path" << endl;
+    cout << "Downloaded purplepipmanager.exe successfully. Its in C:\\purplepipmanager directory (or Downloads), add its in path or copy file purple.exe to directory, that exists in path" << endl;
     return true;
 }
 
@@ -97,12 +98,12 @@ void runGitShell() {
 
         if (gitCmd == "exit") {
             break;
-		}
-		else if (gitCmd == "help") {
-			cout << "Commands:" << endl;
-			cout << "exit - Exit git-shell mode" << endl;
-			cout << "help - Show this help message" << endl;
-		}
+        }
+        else if (gitCmd == "help") {
+            cout << "Commands:" << endl;
+            cout << "exit - Exit git-shell mode" << endl;
+            cout << "help - Show this help message" << endl;
+        }
 
         runCommand("git " + gitCmd);
     }
@@ -112,8 +113,8 @@ void runpurpleShell() {
     string purplecmd;
     cout << "Entering purple-shell mode. Type 'exit' to leave." << endl;
     // проверка существует ли файл purple.exe в path
-	bool isexist = checkPurpleExeExists();
-	if (isexist) {
+    bool isexist = checkPurpleExeExists();
+    if (isexist) {
         while (true) {
             cout << "coolshell@purple" << "> ";
             getline(cin, purplecmd);
@@ -128,11 +129,11 @@ void runpurpleShell() {
             }
 
             bool result = runCommand("purple --command" + purplecmd); // !!
-			if (!result) {
-				runCommand("C:\\Users\\%USERNAME%\\Downloads\\purple.exe --command " + purplecmd);
-			}
+            if (!result) {
+                runCommand("C:\\Users\\%USERNAME%\\Downloads\\purple.exe --command " + purplecmd);
+            }
         }
-	}
+    }
 }
 
 struct HostInfo {
@@ -230,37 +231,39 @@ void scanShell() {
 
 // START OF DELETING COMMENTS
 bool isComment(const string& line) {
-    size_t found = line.find("//");
-    return found != string::npos;
+    regex cppComment("//.*");
+    if (regex_search(line, cppComment))
+        return true;
+
+    regex pythonComment("#.*");
+    if (regex_search(line, pythonComment))
+        return true;
+
+    return false;
 }
 
 string removeSingleLineComment(const string& line) {
-    size_t found = line.find("//");
-    if (found != string::npos) {
-        return line.substr(0, found);
-    }
-    return line;
+    regex cppComment("//.*");
+    string lineWithoutCppComment = regex_replace(line, cppComment, "");
+
+    regex pythonComment("#.*");
+    string lineWithoutPythonComment = regex_replace(lineWithoutCppComment, pythonComment, "");
+
+    return lineWithoutPythonComment;
 }
 
 string removeMultiLineComment(const string& line, bool& inComment) {
-    size_t startComment = line.find("/*");
-    size_t endComment = line.find("*/");
+    regex multiLineComment("/\\*.*?\\*/");
+    string lineWithoutMultiLineComment = regex_replace(line, multiLineComment, "");
 
-    if (startComment != string::npos && endComment != string::npos && startComment < endComment) {
+    regex pythonComment("#.*");
+    string lineWithoutPythonComment = regex_replace(lineWithoutMultiLineComment, pythonComment, "");
+
+    if (lineWithoutMultiLineComment != lineWithoutPythonComment) {
         inComment = false;
-        return line.substr(0, startComment) + line.substr(endComment + 2);
+        return lineWithoutPythonComment;
     }
-    else if (startComment != string::npos && (endComment == string::npos || endComment < startComment)) {
-        inComment = true;
-        return line.substr(0, startComment);
-    }
-    else if (inComment && endComment != string::npos) {
-        inComment = false;
-        return line.substr(endComment + 2);
-    }
-    else if (inComment) {
-        return "";
-    }
+
     return line;
 }
 
@@ -309,7 +312,7 @@ void downloadPackage(const string& packageName) {
     }
     else {
         cout << "Using winget to download " << packageName << "..." << endl;
-		runCommand("winget install " + packageName);
+        runCommand("winget install " + packageName);
     }
 }
 
@@ -398,7 +401,8 @@ void readFile(const string& filepath) {
             cout << line << endl;
         }
         file.close();
-    } else {
+    }
+    else {
         cerr << "Unable to open file: " << filepath << endl;
     }
 }
@@ -411,7 +415,7 @@ void listFilesInDirectory() {
         auto filesize = entry.file_size();
         // size файла
         string readable_size = formatFileSize(filesize);
-		// get file icon
+        // get file icon
         string icon = getFileIcon(filepath.extension().string());
 
         cout << icon << " " << filename << " | " << readable_size << endl;
@@ -430,22 +434,22 @@ void printSystemInfo() {
             std::wcout << L"Windows Version: " << rovi.dwMajorVersion << L"." << rovi.dwMinorVersion << L"." << rovi.dwBuildNumber << std::endl;
         }
     }
-	// computer name
-	wchar_t computername[MAX_COMPUTERNAME_LENGTH + 1];
-	DWORD computername_len = MAX_COMPUTERNAME_LENGTH + 1;
-	GetComputerName(computername, &computername_len);
-	wcout << L"Computer Name: " << computername << endl;
+    // computer name
+    wchar_t computername[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD computername_len = MAX_COMPUTERNAME_LENGTH + 1;
+    GetComputerName(computername, &computername_len);
+    wcout << L"Computer Name: " << computername << endl;
 
-	// username
-	wchar_t username[UNLEN + 1];
-	DWORD username_len = UNLEN + 1;
-	GetUserName(username, &username_len);
-	wcout << L"Username: " << username << endl;
+    // username
+    wchar_t username[UNLEN + 1];
+    DWORD username_len = UNLEN + 1;
+    GetUserName(username, &username_len);
+    wcout << L"Username: " << username << endl;
 
-	// number of processors
-	SYSTEM_INFO si;
-	GetSystemInfo(&si);
-	wcout << L"Number of Processors: " << si.dwNumberOfProcessors << endl;
+    // number of processors
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    wcout << L"Number of Processors: " << si.dwNumberOfProcessors << endl;
 }
 
 void clearScreen() {
@@ -467,9 +471,9 @@ vector<string> splitString(const string& str) {
 int main() {
     string input;
     while (true) {
-		if (isWslMode) {
-			cout << "coolshell@wsl" << "> ";
-		}
+        if (isWslMode) {
+            cout << "coolshell@wsl" << "> ";
+        }
         else {
             cout << "coolshell@main" << "> ";
         }
@@ -482,50 +486,63 @@ int main() {
         if (command == "help") {
             cout << "Available commands:\n";
             cout << "  git         Inits a git-shell\n";
-			cout << "  cd          Changes path\n";
-			cout << "  rm          Removes the file without annoying /s /q\n";
-			cout << "  ls          Lists files in current directory\n";
-			cout << "  rf          Prints the content of the file\n";
-			cout << "  clear       Clears the screen\n";
-			cout << "  pwd         Prints current path\n";
-			cout << "  date        Prints current date\n";
-			cout << "  time        Prints current time\n";
-			cout << "  dc          Deletes comments in code\n";
-			cout << "  hostname    Prints current computer name\n";
-			cout << "  echo        Prints text\n";
+            cout << "  cd          Changes path\n";
+            cout << "  rm          Removes the file without annoying /s /q\n";
+            cout << "  ls          Lists files in current directory\n";
+            cout << "  rf          Prints the content of the file\n";
+            cout << "  clear       Clears the screen\n";
+            cout << "  pwd         Prints current path\n";
+            cout << "  date        Prints current date\n";
+            cout << "  time        Prints current time\n";
+            cout << "  dc          Deletes comments in code\n";
+            cout << "  hostname    Prints current computer name\n";
+            cout << "  echo        Prints text\n";
             cout << "  download    Downloads a package\n";
-			cout << "  wsl         Inits a wsl-shell\n";
-			cout << "  purple      Inits a purple-shell\n";
+            cout << "  wsl         Inits a wsl-shell\n";
+            cout << "  purple      Inits a purple-shell\n";
+            cout << "  sudo        Sudo mode\n";
             cout << "  info        Prints info about system\n";
-			cout << "  help        Prints this help message\n";
-			cout << "  scan        Scanning network utility\n";
+            cout << "  help        Prints this help message\n";
+            cout << "  scan        Scanning network utility\n";
             cout << "  exit        Exits the shell\n";
-        } else if (command == "exit") {
+        }
+        else if (command == "exit") {
             break;
-        } else if (command == "git") {
+        }
+        else if (command == "git") {
             runGitShell();
         }
-		else if (command == "purple") {
+        else if (command == "purple") {
             runpurpleShell();
-		}
+        }
         else if (command == "scan") {
-			scanShell();
+            scanShell();
+        }
+		else if (command == "sudo") {
+            string cmdToExecute;
+            for (size_t i = 1; i < tokens.size(); ++i) {
+                cmdToExecute += tokens[i] + " ";
+            }
+
+            ShellExecute(NULL, L"runas", L"helper.exe", (LPCWSTR)cmdToExecute.c_str(), NULL, SW_SHOWNORMAL);
+
+
         }
         else if (command == "dc") {
-			removeCommentsFromFile(tokens[1], tokens[2]);
+            removeCommentsFromFile(tokens[1], tokens[2]);
         }
         else if (command == "cd" && tokens.size() > 1) {
             if (!changeDirectory(tokens[1])) {
                 cerr << "Failed to change directory to: " << tokens[1] << endl;
             }
         }
-		else if (command == "rf" && tokens.size() > 1) {
-			string tokenString = "";
-			for (const auto& token : tokens) {
-				tokenString += token + " ";
-			}
-			readFile(tokenString);
-		}
+        else if (command == "rf" && tokens.size() > 1) {
+            string tokenString = "";
+            for (const auto& token : tokens) {
+                tokenString += token + " ";
+            }
+            readFile(tokenString);
+        }
         else if (command == "rm" && tokens.size() > 1) {
             removeFile(tokens[1]);
         }
@@ -534,7 +551,7 @@ int main() {
         }
         else if (command == "clear") {
             clearScreen();
-        } 
+        }
         else if (command == "pwd") {
             printCurrentPath();
         }
@@ -556,12 +573,12 @@ int main() {
         else if (command == "wsl") {
             initWslShell();
         }
-		else if (command == "info") {
-			printSystemInfo();
-		}
+        else if (command == "info") {
+            printSystemInfo();
+        }
         else {
-			// Исполнение команды в консоли (либо если в wsl режиме, тогда в wsl)
-			runCommand(command);
+            // Исполнение команды в консоли (либо если в wsl режиме, тогда в wsl)
+            runCommand(command);
         }
     }
     return 0;
