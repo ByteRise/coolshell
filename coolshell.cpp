@@ -11,6 +11,8 @@
 #include <lmcons.h>
 #include <sstream>
 #include <regex>
+#include <openssl/evp.h>
+#include <iomanip>
 
 using namespace std;
 
@@ -456,6 +458,38 @@ void clearScreen() {
     system("cls");
 }
 
+std::string calcHash(const std::string& file_path, const EVP_MD* md_type) {
+    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+    unsigned char md_value[EVP_MAX_MD_SIZE];
+    unsigned int md_len;
+    EVP_DigestInit_ex(mdctx, md_type, NULL);
+
+    std::ifstream file(file_path, std::ifstream::binary);
+    if (!file.is_open()) {
+        EVP_MD_CTX_free(mdctx);
+        throw std::runtime_error("Could not open file " + file_path);
+    }
+
+    const int bufSize = 32768;
+    char* buffer = new char[bufSize];
+    while (file.good()) {
+        file.read(buffer, bufSize);
+        EVP_DigestUpdate(mdctx, buffer, file.gcount());
+    }
+    file.close();
+    delete[] buffer;
+
+    EVP_DigestFinal_ex(mdctx, md_value, &md_len);
+    EVP_MD_CTX_free(mdctx);
+
+    std::stringstream ss;
+    for (unsigned int i = 0; i < md_len; i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)md_value[i];
+    }
+
+    return ss.str();
+}
+
 
 
 vector<string> splitString(const string& str) {
@@ -501,6 +535,7 @@ int main() {
             cout << "  wsl         Inits a wsl-shell\n";
             cout << "  purple      Inits a purple-shell\n";
             cout << "  sudo        Sudo mode\n";
+            cout << "  hash        Prints hashes of the file\n";
             cout << "  info        Prints info about system\n";
             cout << "  help        Prints this help message\n";
             cout << "  scan        Scanning network utility\n";
@@ -517,6 +552,26 @@ int main() {
         }
         else if (command == "scan") {
             scanShell();
+        }
+        else if (command == "hash") {
+            string file_path = "";
+            for (const auto& token : tokens) {
+                if (token != "hash") {
+                    file_path += token + " ";
+                }
+            }
+
+            try {
+                string sha256_hash = calcHash(file_path, EVP_sha256());
+                cout << "SHA256: " << sha256_hash << endl;
+
+                string md5_hash = calcHash(file_path, EVP_md5());
+                cout << "MD5: " << md5_hash << endl;
+            }
+            catch (const std::exception& e) {
+                cerr << "Error: " << e.what() << endl;
+                return 1;
+            }
         }
 		else if (command == "sudo") {
             string cmdToExecute;
@@ -539,7 +594,9 @@ int main() {
         else if (command == "rf" && tokens.size() > 1) {
             string tokenString = "";
             for (const auto& token : tokens) {
-                tokenString += token + " ";
+                if (token != "rf") {
+                    tokenString += token + " ";
+                }
             }
             readFile(tokenString);
         }

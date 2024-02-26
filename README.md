@@ -36,6 +36,7 @@ Run `coolshell.cpp` in your preferred C++ environment. Once started, you will se
 - `echo <text>`: Prints the provided text.
 - `download <package>`: Downloads the specified package using the appropriate package manager.
 - `wsl`: Toggles WSL mode on or off.
+- `hash`: Prints the hashes of file (SHA256, MD5)
 - `purple`: Toggles purple mode on or off.
 - `info`: Prints info of computer
 - `exit`: Exits the shell.
