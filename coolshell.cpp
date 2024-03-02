@@ -51,6 +51,7 @@ int main() {
             cout << "  hostname    Prints current computer name\n";
             cout << "  echo        Prints text\n";
             cout << "  download    Downloads a package\n";
+            cout << "  takeowner   Changes owner of file and give full perms\n";
             cout << "  wsl         Inits a wsl-shell\n";
             cout << "  purple      Inits a purple-shell\n";
             cout << "  sudo        Sudo mode\n";
@@ -103,7 +104,7 @@ int main() {
 
         }
         else if (command == "dc") {
-            removeCommentsFromFile(tokens[1], tokens[2]);
+            removeComments(tokens[1], tokens[2]);
         }
         else if (command == "cd" && tokens.size() > 1) {
             if (!changeDirectory(tokens[1])) {

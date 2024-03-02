@@ -231,76 +231,30 @@ void scanShell() {
 }
 
 // START OF DELETING COMMENTS
-bool isComment(const string& line) {
-    regex cppComment("//.*");
-    if (regex_search(line, cppComment))
-        return true;
-
-    regex pythonComment("#.*");
-    if (regex_search(line, pythonComment))
-        return true;
-
-    return false;
-}
-
-string removeSingleLineComment(const string& line) {
-    regex cppComment("//.*");
-    string lineWithoutCppComment = regex_replace(line, cppComment, "");
-
-    regex pythonComment("#.*");
-    string lineWithoutPythonComment = regex_replace(lineWithoutCppComment, pythonComment, "");
-
-    return lineWithoutPythonComment;
-}
-
-string removeMultiLineComment(const string& line, bool& inComment) {
-    regex multiLineComment("/\\*.*?\\*/");
-    string lineWithoutMultiLineComment = regex_replace(line, multiLineComment, "");
-
-    regex pythonComment("#.*");
-    string lineWithoutPythonComment = regex_replace(lineWithoutMultiLineComment, pythonComment, "");
-
-    if (lineWithoutMultiLineComment != lineWithoutPythonComment) {
-        inComment = false;
-        return lineWithoutPythonComment;
+void removeComments(const std::string& inputFile, const std::string& outputFile) {
+    std::ifstream ifs(inputFile);
+    if (!ifs.is_open()) {
+        std::cerr << "Error opening input file: " << inputFile << '\n';
+        return;
     }
 
-    return line;
-}
+    std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    ifs.close();
 
-string removeCommentsFromFile(const string& inputFile, const string& outputFile) {
-    ifstream inFile(inputFile);
-    ofstream outFile(outputFile);
+    // Regular expression pattern for C++-style comments and string literals
+    std::regex pattern(R"((/\*[^*]*\*+([^/*][^*]*\*+)*\/)|//.*$)");
 
-    if (!inFile) {
-        cerr << "Unable to open input file: " << inputFile << endl;
-        return "1";
+    // Replace comments with empty strings
+    content = std::regex_replace(content, pattern, "");
+
+    std::ofstream ofs(outputFile);
+    if (!ofs.is_open()) {
+        std::cerr << "Error opening output file: " << outputFile << '\n';
+        return;
     }
 
-    if (!outFile) {
-        cerr << "Unable to open output file: " << outputFile << endl;
-        return "1";
-    }
-
-    string line;
-    bool inMultiLineComment = false;
-
-    while (getline(inFile, line)) {
-        if (!inMultiLineComment) {
-            line = removeSingleLineComment(line);
-            line = removeMultiLineComment(line, inMultiLineComment);
-            if (!line.empty()) {
-                outFile << line << endl;
-            }
-        }
-        else {
-            line = removeMultiLineComment(line, inMultiLineComment);
-        }
-    }
-
-    inFile.close();
-    outFile.close();
-    return "0";
+    ofs << content;
+    ofs.close();
 }
 
 // END OF DELETING COMMENTS
