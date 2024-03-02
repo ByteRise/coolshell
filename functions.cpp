@@ -295,8 +295,9 @@ void removeFile(const string& filename) {
     }
 }
 
+
 void printCurrentPath() {
-    cout << filesystem::current_path() << endl;
+    cout << filesystem::current_path() << '\n';
 }
 
 void printCurrentDate() {

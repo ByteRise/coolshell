@@ -24,11 +24,14 @@ bool isWslMode = false;
 int main() {
     string input;
     while (true) {
+        string path = filesystem::current_path().generic_string();
+        replace(path.begin(), path.end(), '\\', '/');
+
         if (isWslMode) {
-            cout << "coolshell@wsl" << "> ";
+            cout << "coolshell@wsl>" << "" << path << "> ";
         }
         else {
-            cout << "coolshell@main" << "> ";
+            cout << "coolshell@main>" << path << "> ";
         }
         getline(cin, input);
 
@@ -154,8 +157,11 @@ int main() {
             printSystemInfo();
         }
         else {
-            // Исполнение команды в консоли (либо если в wsl режиме, тогда в wsl)
-            runCommand(command, isWslMode);
+            string tokenString = "";
+            for (const auto& token : tokens) {
+                 tokenString += token + " ";
+            }
+            runCommand(tokenString, isWslMode);
         }
     }
     return 0;
