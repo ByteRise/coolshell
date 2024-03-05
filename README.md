@@ -1,46 +1,86 @@
 # CoolShell
 
-CoolShell is a custom shell utility designed to enhance the command-line experience in Windows environments. It also offers functionality to switch to WSL (Windows Subsystem for Linux) mode for a seamless transition between Windows and Linux commands.
+CoolShell is a custom command-line shell program written in C++. It provides various utility commands and features beyond a typical terminal shell.
+
+## Overview
+
+The `coolshell.cpp` file contains the main implementation of the CoolShell program. It utilizes various C++ standard libraries and Windows APIs to create an interactive shell with custom commands.
+
+The `functions.cpp` file contains definitions for utility and helper functions used by the main `coolshell.cpp` program. This separation of concerns keeps the main file clean.
 
 ## Features
 
-- **WSL Mode Toggle**: Switch between Windows and WSL mode to execute commands in the desired environment.
-- **Git Shell**: Enter a dedicated shell for executing Git commands.
-- **Purple Shell**: Automatically adds `purple --command` before the command
-- **Download Packages**: Supports package installation using `apt-get` in WSL mode or `winget` in Windows mode (note: `winget` support is a TODO).
-- **File Operations**: Remove files, list files in the current directory, and display file sizes in a human-readable format.
-- **System Information**: Print the current system's computer name, path, date, and time.
-- **Text Output**: Echo text back to the console.
-- **Directory Navigation**: Change the current working directory.
-- **Clear Screen**: Clear the console output.
-- **Command Help**: Display a list of available commands.
+- **Custom commands:** In addition to executing system commands, CoolShell has various custom commands:
 
-## Usage
+  - `help`: Print available commands
+  - `git`: Enter Git shell  
+  - `purple`: Enter Purple shell
+  - `cd`: Change directory
+  - `rm`: Remove file
+  - `ls`: List directory contents  
+  - `clear`: Clear screen
+  - `pwd`: Print working directory
+  - `date`: Print date
+  - `time`: Print time
+  - `hostname`: Print computer name
+  - `echo`: Print input text
+  - `download`: Download package
+  - `wsl`: Toggle WSL mode
+  - `hash`: Print file hashes
+  - `info`: Print system info
 
-Run `coolshell.cpp` in your preferred C++ environment. Once started, you will see a prompt indicating the mode you are in (`coolshell@main` for Windows or `coolshell@wsl` for WSL mode and `coolshell@git` for git mode). You can enter commands directly at the prompt.
+- **WSL mode:** Toggle between Windows and WSL mode for executing system commands.
 
-### Available Commands
+- **File utilities:** Remove, list, read files with custom commands.
 
-- `help`: Prints the help message with available commands.
-- `git`: Initiates a git-shell.
-- `cd <path>`: Changes the current directory to the specified path.
-- `rm <filename>`: Removes the specified file.
-- `ls`: Lists files in the current directory with icons and sizes.
-- `clear`: Clears the console screen.
-- `rf`: Reads file context
-- `pwd`: Prints the current working directory path.
-- `dc`: Deletes comments in code (only cpp files for now)
-- `date`: Prints the current date.
-- `time`: Prints the current time.
-- `hostname`: Prints the name of the computer.
-- `echo <text>`: Prints the provided text.
-- `download <package>`: Downloads the specified package using the appropriate package manager.
-- `wsl`: Toggles WSL mode on or off.
-- `hash`: Prints the hashes of file (SHA256, MD5)
-- `purple`: Toggles purple mode on or off.
-- `info`: Prints info of computer
-- `exit`: Exits the shell.
+- **System info:** Print info like computer name, date, time, etc. 
 
+- **Input parsing:** Split input into tokens for processing.
+
+- **Directory navigation**: Change current working directory.
+
+- **Package management**: Download packages using `winget` or `apt-get`.
+
+- **Git shell**: Enter dedicated Git shell.
+
+## Code Overview
+
+**`coolshell.cpp`**
+
+- `main()`: Program entry point. Implements shell REPL loop.
+
+- `splitString()`: Split input into tokens.
+
+- `runCommand()`: Execute system command.
+
+- `initWslShell()`: Toggle WSL mode on/off.
+
+- Calls out to `functions.cpp` for other utilities.
+
+**`functions.cpp`**
+
+- `changeDirectory()`: Change current working directory.
+
+- `removeFile()`: Delete a file.
+
+- `listFilesInDirectory()`: Print formatted directory listing.
+
+- `printCurrentPath()`: Print current working directory path. 
+
+- `printCurrentDate()`, `printCurrentTime()`: Print current date and time strings.
+
+- `printComputerName()`: Print computer name.
+
+- `echoText()`: Print input text. 
+
+- `downloadPackage()`: Download package via package manager.
+
+- `printSystemInfo()`: Print system info like OS version, computer name, etc.
+
+- `clearScreen()`: Clear console screen.
+
+- And more...
+s
 ## Build and Run
 
 To build and run CoolShell, ensure you have a C++ compiler and the necessary build tools installed. This program uses the `Windows.h` and `filesystem` libraries, which may require a C++17 compatible compiler.
